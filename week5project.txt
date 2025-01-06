@@ -1,0 +1,88 @@
+Create collections for products, orders, and customers.
+Insert sample data for products with details like ProductID, Category, Price, and Stock.
+
+
+// Insert sample products
+db.Products.insertMany([
+    { ProductID: 1, Name: "Laptop", Category: "Electronics", Price: 1000, Stock: 50, Rating: 4.5 },
+    { ProductID: 2, Name: "Smartphone", Category: "Electronics", Price: 700, Stock: 30, Rating: 4.2 },
+    { ProductID: 3, Name: "Desk Chair", Category: "Furniture", Price: 150, Stock: 20, Rating: 4.0 },
+    { ProductID: 4, Name: "Bookshelf", Category: "Furniture", Price: 120, Stock: 15, Rating: 4.1 },
+    { ProductID: 5, Name: "Headphones", Category: "Electronics", Price: 200, Stock: 60, Rating: 4.7 }
+]);
+
+// Insert sample orders
+db.Orders.insertMany([
+    { OrderID: 1, CustomerID: 101, ProductID: 1, Quantity: 1, OrderDate: new Date("2025-01-01") },
+    { OrderID: 2, CustomerID: 102, ProductID: 2, Quantity: 2, OrderDate: new Date("2025-01-02") },
+    { OrderID: 3, CustomerID: 103, ProductID: 3, Quantity: 1, OrderDate: new Date("2025-01-03") }
+]);
+
+// Insert sample customers
+db.Customers.insertMany([
+    { CustomerID: 101, Name: "Alice", Email: "alice@example.com" },
+    { CustomerID: 102, Name: "Bob", Email: "bob@example.com" },
+    { CustomerID: 103, Name: "Charlie", Email: "charlie@example.com" }
+]);
+
+
+Query to select all products in a specific category.
+
+db.Products.find({ Category: "Electronics" });
+
+
+
+Update the stock when a new order is placed.
+
+// Example: Reduce stock for ProductID 2 by 2 units
+db.Products.updateOne(
+    { ProductID: 2 },
+    { $inc: { Stock: -2 } }
+);
+
+
+Delete products that are no longer available.
+
+
+Filter products based on price range and availability.// Delete products with zero stock
+db.Products.deleteMany({ Stock: { $lte: 0 } });
+
+Use AND/OR to filter products by price and rating.
+
+// Example: Find products priced below $200 OR with a rating above 4.5
+db.Products.find({
+    $or: [
+        { Price: { $lt: 200 } },
+        { Rating: { $gt: 4.5 } }
+    ]
+});
+
+Sort products by price in ascending order.
+
+db.Products.find().sort({ Price: 1 });
+
+
+Use aggregate functions to find the average price of products.
+
+db.Products.aggregate([
+    { $group: { _id: null, AveragePrice: { $avg: "$Price" } } }
+]);
+
+
+
+Group products by category and calculate the total revenue.
+
+
+db.Products.aggregate([
+    { $lookup: {
+        from: "Orders",
+        localField: "ProductID",
+        foreignField: "ProductID",
+        as: "Orders"
+    }},
+    { $unwind: "$Orders" },
+    { $group: {
+        _id: "$Category",
+        TotalRevenue: { $sum: { $multiply: ["$Orders.Quantity", "$Price"] } }
+    }}
+]);
